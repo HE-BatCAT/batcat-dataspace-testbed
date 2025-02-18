@@ -19,3 +19,8 @@ variable "linkahead-port" {
   description = "Linkahead http port"
   default = 10080
 }
+
+variable "linkahead-image" {
+  description = "The docker image tag of the linkahead build you want to be loaded."
+  default = "indiscale/linkahead:0.16.0-rc-ruqad.1"
+}

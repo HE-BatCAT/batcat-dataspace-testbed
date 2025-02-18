@@ -87,5 +87,5 @@ locals {
   mariadb-host = "mariadb-service"
   mariadb-port = 3306
   app-name = "linkahead"
-  linkahead-image = "indiscale/linkahead:0.16.0-rc-ruqad.1"
+  linkahead-image = var.linkahead-image
 }
