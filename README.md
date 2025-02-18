@@ -56,6 +56,7 @@ Once Terraform has completed the deployment, type `kubectl get pods` and verify 
 
 ```shell
 ❯ kubectl get pods -A
+```
 
 ### Test LinkAhead
 
