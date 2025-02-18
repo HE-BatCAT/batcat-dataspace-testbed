@@ -69,6 +69,14 @@ Once Terraform has completed the deployment, type `kubectl get pods` and verify 
     `minikube image load linkahead:build-1`
 * Run `terraform apply -var linkahead-image="linkahead:build-1"`
 
+### Stop k8s cluster
+
+To stop everything:
+
+```sh
+minikube delete --all
+```
+
 ## License
 
 TODO
