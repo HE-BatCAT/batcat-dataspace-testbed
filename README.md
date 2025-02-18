@@ -64,7 +64,8 @@ Once Terraform has completed the deployment, type `kubectl get pods` and verify 
 
 ### Load a Custom LinkAhead Image
 
-* Build the Docker image and tag it, e.g. `linkahead:build-1`
+* Build the Docker image and tag it, e.g. `linkahead:build-1`. (The current default is
+  `indiscale/linkahead:dev`.)
 * Load the image into the minikube cluster:
     `minikube image load linkahead:build-1`
 * Run `terraform apply -var linkahead-image="linkahead:build-1"`
