@@ -51,6 +51,9 @@ terraform apply
 
 > You can call `deploy_testbed.sh` instead.
 
+> You need to have the alias for kubectl available (see above), otherwise terraform will not be able to
+> connect to you minikube cluster.
+
 
 Once Terraform has completed the deployment, type `kubectl get pods` and verify the output:
 
@@ -80,4 +83,10 @@ minikube delete --all
 
 ## License
 
-TODO
+AGPL 3.0 or later
+
+Copyright (C) 2025 IndiScale GmbH <info@indiscale.com>
+Copyright (C) 2025 Timm Fitschen <t.fitschen@indiscale.com>
+Copyright (C) 2025 Henrik tom Wörden
+Copyright (C) 2025 Daniel Hornung
+
