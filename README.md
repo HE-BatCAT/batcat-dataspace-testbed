@@ -8,10 +8,11 @@ Current scope: Minimal LinkAhead deployment using Minikube.
 
 ### Requirements
 
-* Basic understanding of Kubernetes, Docker, Terraform.
+* Basic understanding of Kubernetes, Docker, Terraform, SSH.
 * Docker installed
 * Minikube installed
 * Terraform installed
+* SSH installed
 * a POSIX-compliant shell
 
 All commands are executed from the repository's root directory unless stated otherwise.
@@ -34,19 +35,19 @@ Now, we configure and start the Kubernetes cluster using Minikube:
       --selector=app.kubernetes.io/component=controller \
       --timeout=90s
     ```
-5. Forward the local port 80 to the ingress controller:
-    `sudo ssh -fN -i $(minikube ssh-key) docker@$(minikube ip) -L 80:localhost:80`
+5. Forward the local port 8080 to the ingress controller:
+    `ssh -fN -i $(minikube ssh-key) docker@$(minikube ip) -L 8080:localhost:80`
 
 > Step 0 to 5 are available by just calling `start_k8_cluster.sh`.
 
 ### Deploy the Testbed
 
-Now, deploy the testbed, type 'yes' when promted:
+Now, deploy the testbed, type 'yes' when promted (use `-auto-approve` to suppress the prompt):
 
 ```
 cd deployment
 terraform init
-terraform apply
+terraform apply [-auto-approve]
 ```
 
 > You can call `deploy_testbed.sh` instead.
@@ -61,9 +62,33 @@ Once Terraform has completed the deployment, type `kubectl get pods` and verify 
 ❯ kubectl get pods -A
 ```
 
+### Port-forwarding for Localhost
+
+Before you can access either of the services locally, you need set up port-forwarding:
+
+#### LinkAhead
+
+* `LA_NODE_PORT="$(kubectl get -n batcat service linkahead-service -o go-template='{{range .spec.ports}}{{if .nodePort}}{{.nodePort}}{{"\n"}}{{end}}{{end}}')"`
+* `ssh -fN -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" -i $(minikube ssh-key) docker@$(minikube ip) -L 40002:localhost:${LA_NODE_PORT}`
+
+> You can call `port_forwarding.la.sh` instead
+
+#### ElabFTW
+
+* `ELAB_NODE_PORT="$(kubectl get -n batcat service elabftw-service  -o go-template='{{range .spec.ports}}{{if .nodePort}}{{.nodePort}}{{"\n"}}{{end}}{{end}}')"`
+* `ssh -fN -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" -i $(minikube ssh-key) docker@$(minikube ip) -L 40002:localhost:${ELAB_NODE_PORT}`
+
+> You can call `port_forwarding.elab.sh` instead
+
 ### Test LinkAhead
 
-* Browse to `http://localhost/linkahead`
+* Browse to `http://localhost:40001/`
+* Note: this is plain http, not https!
+
+### Test ElabFTW
+
+* Browse to `https://localhost:40002/`
+* Note: this is https, not plain http!
 
 ### Load a Custom LinkAhead Image
 

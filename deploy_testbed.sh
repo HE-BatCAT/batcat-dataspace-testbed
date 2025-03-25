@@ -2,5 +2,5 @@
 
 cd deployment/
 terraform init
-terraform apply
+terraform apply -auto-approve
 cd -

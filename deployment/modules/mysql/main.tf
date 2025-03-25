@@ -1,4 +1,4 @@
-resource "kubernetes_deployment" "mariadb" {
+resource "kubernetes_deployment" "mysql" {
   metadata {
     name      = local.app-name
     namespace = var.namespace
@@ -22,19 +22,34 @@ resource "kubernetes_deployment" "mariadb" {
       }
       spec {
         container {
-          image = local.mariadb-image
+          image = local.mysql-image
           name  = local.app-name
 
           env_from {
             config_map_ref {
-              name = kubernetes_config_map.mariadb-env.metadata[0].name
+              name = kubernetes_config_map.mysql-env.metadata[0].name
             }
           }
           port {
             container_port = 3306
-            name           = "mariadb-port"
+            name           = "mysql-port"
           }
 
+          readiness_probe {
+            exec {
+              command = [
+                "/usr/bin/mysql",
+                "--user=elabftw",
+                "--password=elabftw",
+                "--execute",
+                "SHOW DATABASES;",
+              ]
+            }
+            initial_delay_seconds = 5
+            failure_threshold = 10
+            period_seconds    = 2
+            timeout_seconds   = 1
+          }
           liveness_probe {
             tcp_socket {
               port = 3306
@@ -50,28 +65,32 @@ resource "kubernetes_deployment" "mariadb" {
   }
 }
 
-resource "kubernetes_config_map" "mariadb-env" {
+resource "kubernetes_config_map" "mysql-env" {
   metadata {
     name      = "${local.app-name}-env"
     namespace = var.namespace
   }
 
   data = {
-    MYSQL_ROOT_PASSWORD = "caosdb1234"
+    MYSQL_ROOT_PASSWORD = "Pu87cw5dhoSGRboI7R1ClmJQruB2kYs"
+    MYSQL_DATABASE = "elabftw"
+    MYSQL_USER = "elabftw"
+    MYSQL_PASSWORD = "elabftw"
+    TZ = "Europe/Berlin"
   }
 }
 
-resource "kubernetes_service" "mariadb-service" {
+resource "kubernetes_service" "mysql-service" {
   metadata {
     name      = "${local.app-name}-service"
     namespace = var.namespace
   }
   spec {
     selector = {
-      App = kubernetes_deployment.mariadb.spec.0.template.0.metadata[0].labels.App
+      App = kubernetes_deployment.mysql.spec.0.template.0.metadata[0].labels.App
     }
     port {
-      name        = "mariadb-port"
+      name        = "mysql-port"
       port        = var.database-port
       target_port = var.database-port
     }
@@ -79,7 +98,7 @@ resource "kubernetes_service" "mariadb-service" {
 }
 
 locals {
-  app-name = "mariadb"
-  mariadb-image = "mariadb:10.11"
-  database-host  = kubernetes_service.mariadb-service.metadata[0].name
+  app-name = "mysql"
+  mysql-image = "mysql:8.0"
+  database-host  = kubernetes_service.mysql-service.metadata[0].name
 }

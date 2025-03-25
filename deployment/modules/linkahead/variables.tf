@@ -24,3 +24,11 @@ variable "linkahead-image" {
   description = "The docker image tag of the linkahead build you want to be loaded."
   default = "indiscale/linkahead:0.16.1"
 }
+
+variable "mariadb-host" {
+  description = "The host of the MariaDB database."
+}
+
+variable "mariadb-port" {
+  description = "The port of the MariaDB database."
+}

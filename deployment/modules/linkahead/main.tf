@@ -58,9 +58,8 @@ resource "kubernetes_config_map" "linkahead-env" {
 
   data = {
     CAOSDB_CONFIG_AUTH_OPTIONAL = "TRUE"
-    CAOSDB_CONFIG_MYSQL_HOST = local.mariadb-host
-    CAOSDB_CONFIG_MYSQL_PORT = local.mariadb-port
-    CAOSDB_CONFIG_CONTEXT_ROOT = "/linkahead"
+    CAOSDB_CONFIG_MYSQL_HOST = var.mariadb-host
+    CAOSDB_CONFIG_MYSQL_PORT = var.mariadb-port
     NO_TLS = "1"
     DEBUG = "1"
   }
@@ -78,14 +77,12 @@ resource "kubernetes_service" "linkahead-service" {
     port {
       name        = "linkahead-port"
       port        = var.linkahead-port
-      target_port = 10080
     }
+    type = "NodePort"
   }
 }
 
 locals {
-  mariadb-host = "mariadb-service"
-  mariadb-port = 3306
   app-name = "linkahead"
   linkahead-image = var.linkahead-image
 }
