@@ -1,4 +1,4 @@
-build: .init build-edc-connector build-token-service build-linkahead build-untus-proxy
+build: init build-edc-connector build-token-service build-linkahead build-untus-proxy
 
 ### BUILD IMAGES
 build-untus-proxy:
