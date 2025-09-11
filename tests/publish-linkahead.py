@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 
 import sys
+import os
 import json
 import requests
 import linkahead as la
 
 ASSET_ID = sys.argv[1]
 
-PROVIDER_PRIVATE="http://foras:9001"
+host = os.environ.get("HOSTNAME")
+PROVIDER_PRIVATE=f"http://{host}:9001"
 PROVIDER_MANAGEMENT=f"{PROVIDER_PRIVATE}/management"
 PROVIDER_LINKAHEAD=f"{PROVIDER_PRIVATE}/linkahead"
 base_path = la.get_connection()._delegate_connection._base_path
