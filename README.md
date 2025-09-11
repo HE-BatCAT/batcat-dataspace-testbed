@@ -2,84 +2,40 @@
 
 Testbed for the BatCAT data space.
 
-Current scope: Minimal LinkAhead deployment using Minikube.
+## Requirements
 
-## Running the Testbed
-
-### Requirements
-
-* Basic understanding of Kubernetes, Docker, Terraform.
 * Docker installed
-* Minikube installed
-* Terraform installed
 * a POSIX-compliant shell
 
 All commands are executed from the repository's root directory unless stated otherwise.
 
-> Since this is not a production deployment, all applications are deployed _in the same cluster_ and in the
-> same namespace, plainly for the sake of simplicity.
+## Build the Testbed
 
-### Create the K8S cluster
+* `make`
 
-Now, we configure and start the Kubernetes cluster using Minikube:
+This will:
 
-0. `alias minikube='minikube -p batcat'`
-1. `alias kubectl='minikube kubectl --'`
-2. `minikube start`
-3. `minikube addons enable ingress`
-4. Wait for the ingress controller to become available:
-    ```
-    kubectl wait --namespace ingress-nginx \
-      --for=condition=ready pod \
-      --selector=app.kubernetes.io/component=controller \
-      --timeout=90s
-    ```
-5. Forward the local port 80 to the ingress controller:
-    `sudo ssh -fN -i $(minikube ssh-key) docker@$(minikube ip) -L 80:localhost:80`
+* build an edc connector docker image
+* build linkahead (server and backend components) images
+* build an untus-proxy image
+* build a token-service image
 
-> Step 0 to 5 are available by just calling `start_k8_cluster.sh`.
+## Deploy the Testbed
 
-### Deploy the Testbed
+* `cd deployment/`
+* see README.md there
+* `docker compose up -d`
 
-Now, deploy the testbed, type 'yes' when promted:
+## Tests
 
-```
-cd deployment
-terraform init
-terraform apply
-```
+After deployment, you can run tests:
 
-> You can call `deploy_testbed.sh` instead.
-
-> You need to have the alias for kubectl available (see above), otherwise terraform will not be able to
-> connect to you minikube cluster.
-
-
-Once Terraform has completed the deployment, type `kubectl get pods` and verify the output:
-
-```shell
-❯ kubectl get pods -A
-```
-
-### Test LinkAhead
-
-* Browse to `http://localhost/linkahead`
-
-### Load a Custom LinkAhead Image
-
-* Build the Docker image and tag it, e.g. `linkahead:build-1`. (The current default is
-  `indiscale/linkahead:dev`.)
-* Load the image into the minikube cluster:
-    `minikube image load linkahead:build-1`
-* Run `terraform apply -var linkahead-image="linkahead:build-1"`
-
-### Stop k8s cluster
-
-To stop everything:
-
-```sh
-minikube delete --all
-```
+* `cd tests`
+* see README there
+* run any of the tests
+    * `./test_tokens.sh`
+    * `./transfer-pull.sh`
+    * `./transfer-pull.sh`
 
 ## License
 

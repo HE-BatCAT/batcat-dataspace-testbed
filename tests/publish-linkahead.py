@@ -1,0 +1,74 @@
+#!/usr/bin/env python3
+
+import sys
+import json
+import requests
+import linkahead as la
+
+ASSET_ID = sys.argv[1]
+
+PROVIDER_PRIVATE="http://foras:9001"
+PROVIDER_MANAGEMENT=f"{PROVIDER_PRIVATE}/management"
+PROVIDER_LINKAHEAD=f"{PROVIDER_PRIVATE}/linkahead"
+base_path = la.get_connection()._delegate_connection._base_path
+
+template = {
+  "@context": {
+    "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
+  },
+  "@id": None,
+  "properties": {
+    "role": None,
+    "name": None,
+    "description": None,
+    "contenttype": "text/xml",
+  },
+  "dataAddress": {
+    "type": "HttpData",
+    "name": None, # WHY???
+    "baseUrl": None
+  }
+}
+
+def get_base_url(entity_id):
+    return f"{PROVIDER_LINKAHEAD}/Entity/" + str(entity_id)
+
+def to_asset_json(entity):
+    template["@id"] = ASSET_ID
+    #str(entity.id)
+    template["properties"]["id"] = ASSET_ID
+    template["properties"]["role"] = entity.role
+    template["properties"]["name"] = entity.name
+    template["properties"]["description"] = entity.description
+    template["dataAddress"]["name"] = entity.name
+    template["dataAddress"]["baseUrl"] = get_base_url(entity.id)
+    return json.dumps(template)
+
+def publish(assets):
+    for a in assets:
+        print('{ "in":')
+        print(a)
+        print(', "out":')
+        response = requests.post(
+            url=f"{PROVIDER_MANAGEMENT}/v3/assets",
+            data=a,
+            headers={"content-type": "application/json"}
+            )
+        print(response.text)
+        print('}')
+
+def create_record_type():
+    c = la.execute_query("FIND RECORDTYPE")
+    if len(c) == 0:
+        c = la.Container()
+        c.append(la.RecordType(name="Test", description="Test Desc"))
+        c.insert()
+    return c
+
+c = create_record_type()
+
+assets = []
+for e in c:
+    assets.append(to_asset_json(e))
+
+publish(assets)

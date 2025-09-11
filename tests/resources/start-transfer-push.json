@@ -1,0 +1,17 @@
+{
+  "@context": {
+    "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
+  },
+  "@type": "TransferRequestDto",
+  "connectorId": "provider",
+  "counterPartyAddress": "${PROVIDER_DSP}",
+  "contractId": "${CONTRACT_AGREEMENT_ID}",
+  "protocol": "dataspace-protocol-http",
+  "transferType": "HttpData-PUSH",
+  "dataDestination": {
+    "type": "HttpData",
+    "baseUrl": "${DATA_DESTINATION}",
+    "authKey": "Authorization",
+    "authCode": "Bearer ${UPLOAD_ACCESS_TOKEN}"
+  }
+}

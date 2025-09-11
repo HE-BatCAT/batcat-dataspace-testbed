@@ -1,0 +1,141 @@
+x-linkahead-backend: &linkahead-backend
+  image: linkahead-backend:mariadb-11.8.3-noble
+  environment:
+    MARIADB_RANDOM_ROOT_PASSWORD: 1
+x-linkahead: &linkahead
+  image: linkahead:dev-vanilla
+  environment:
+    CAOSDB_CONFIG_AUTH_OPTIONAL: "TRUE"
+    CAOSDB_CONFIG_MYSQL_HOST: "linkahead-backend"
+    CAOSDB_CONFIG_SERVER_PORT_HTTPS: Null
+    CAOSDB_CONFIG_CONTEXT_ROOT: "/linkahead"
+    CAOSDB_CONFIG_ADMIN_USER: "admin"
+    CAOSDB_CONFIG_ADMIN_PASSWORD: "password"
+    JAVA_TOOL_OPTIONS: "-Dcaosdb.debug=true"
+x-consumer: &consumer
+  env_file:
+    - .env
+    - .consumer.env
+  networks:
+    - consumer
+x-provider: &provider
+  networks:
+    - provider
+  env_file:
+    - .env
+    - .provider.env
+x-connector: &connector
+  image: connector:0.13.0
+  volumes:
+    - type: bind
+      source: ${PWD}/config
+      target: /config
+      read_only: true
+  healthcheck:
+    start_period: 10s
+    retries: 10
+    interval: 10s
+    timeout: 5s
+    test: ["CMD", "curl", "--fail-with-body", "http://localhost:19191/api/check/health"]
+x-nginx: &nginx
+  image: nginx:1.29-alpine-slim
+  command: ['nginx-debug', '-g', 'daemon off;']
+  volumes:
+    - type: bind
+      source: nginx/nginx.conf
+      target: /etc/nginx/templates/nginx.conf.template
+      read_only: true
+
+services:
+  provider-linkahead-backend:
+    <<:
+      - *linkahead-backend
+      - *provider
+    container_name: ${COMPOSE_PROJECT_NAME}-provider-linkahead-backend
+  provider-linkahead:
+    <<:
+      - *linkahead
+      - *provider
+    container_name: ${COMPOSE_PROJECT_NAME}-provider-linkahead
+    links:
+      - "provider-linkahead-backend:linkahead-backend"
+    ports:
+      - "9002:80"
+  provider-connector:
+    <<:
+      - *connector
+      - *provider
+    container_name: ${COMPOSE_PROJECT_NAME}-provider-connector
+  provider-token-service:
+    <<: *provider
+    container_name: "${COMPOSE_PROJECT_NAME}-provider-token-service"
+    image: token-service:latest
+    environment:
+      REGISTERED_CLIENTS_JSON_FILE: /var/clients/clients.json
+    volumes:
+      - type: bind
+        source: ./token-service/clients
+        target: /var/clients
+        read_only: true
+  provider-nginx:
+    <<:
+      - *nginx
+      - *provider
+    container_name: "${COMPOSE_PROJECT_NAME}-provider-nginx"
+    ports:
+      - "${PROVIDER_NGINX_PORT_PRIVATE}:8001"
+      - "${PROVIDER_NGINX_PORT_PUBLIC}:8000"
+    links:
+      - "provider-token-service:token-service"
+      - "provider-connector:connector"
+      - "provider-linkahead:linkahead"
+  consumer-token-service:
+    <<: *consumer
+    container_name: "${COMPOSE_PROJECT_NAME}-consumer-token-service"
+    image: token-service:latest
+    environment:
+      REGISTERED_CLIENTS_JSON_FILE: /var/clients/clients.json
+    volumes:
+      - type: bind
+        source: ./token-service/clients
+        target: /var/clients
+        read_only: true
+  consumer-untus-proxy:
+    <<: *consumer
+    container_name: "${COMPOSE_PROJECT_NAME}-consumer-untus-proxy"
+    image: untus-proxy:latest
+    environment:
+      TUS_HOST: "tusd"
+      TUS_PORT: 8000
+    links:
+      - "consumer-tusd:tusd"
+  consumer-tusd:
+    <<: *consumer
+    container_name: "${COMPOSE_PROJECT_NAME}-consumer-tusd"
+    build:
+      context: tus
+    command: ["-port", "8000", "-upload-dir", "${TUSD_DATA_DIR}", "-base-path", "/files"]
+  consumer-connector:
+    <<:
+      - *connector
+      - *consumer
+    container_name: ${COMPOSE_PROJECT_NAME}-consumer-connector
+  consumer-nginx:
+    <<:
+      - *nginx
+      - *consumer
+    container_name: "${COMPOSE_PROJECT_NAME}-consumer-nginx"
+    ports:
+      - "${CONSUMER_NGINX_PORT_PRIVATE}:8001"
+      - "${CONSUMER_NGINX_PORT_PUBLIC}:8000"
+    links:
+      - "consumer-connector:connector"
+      - "consumer-tusd:tusd"
+      - "consumer-token-service:token-service"
+      - "consumer-untus-proxy:untus-proxy"
+
+networks:
+  consumer:
+    name: "${COMPOSE_PROJECT_NAME}-consumer"
+  provider:
+    name: "${COMPOSE_PROJECT_NAME}-provider"
