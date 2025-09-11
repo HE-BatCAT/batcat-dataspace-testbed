@@ -14,7 +14,10 @@ build-edc-connector:
 	$(MAKE) -C edc
 
 init: .init
-	git submodule update --init --recursive
+	git submodule update --init
 
 .init:
 	touch .init
+
+clean:
+	rm .init | true
