@@ -35,7 +35,7 @@ After deployment, you can run tests:
 * run any of the tests
     * `./test_tokens.sh`
     * `./transfer-pull.sh`
-    * `./transfer-pull.sh`
+    * `./transfer-push.sh`
 
 ## License
 
