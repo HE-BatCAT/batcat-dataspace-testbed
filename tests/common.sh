@@ -54,17 +54,22 @@ await_liveness () {
 
 ASSET_ID="${ASSET_ID:-"$(uuidgen)"}"
 create_asset () {
+    trap "$(shopt -p -o errexit)" RETURN
     echo ">>> Create asset $ASSET_ID"
     export ASSET_ID
     #PAYLOAD="$(envsubst < resources/create-asset.json)"
+    #set +e
     #RESPONSE="$(curl $CURL_OPTS --data "${PAYLOAD}" \
+    #    -H "Authorization: Bearer $ACCESS_TOKEN" \
     #    -H 'content-type: application/json' \
     #    ${PROVIDER_MANAGEMENT}/v3/assets \
     #)"
-    RESPONSE="$(./publish-linkahead.py "$ASSET_ID")"
+    RESPONSE="$(ACCESS_TOKEN=$ACCESS_TOKEN ./publish-linkahead.py "$ASSET_ID")"
     CODE=$?
     log $? "$RESPONSE"
-    RESPONSE="$(curl $CURL_OPTS "${PROVIDER_MANAGEMENT}/v3/assets/$ASSET_ID")"
+    RESPONSE="$(curl $CURL_OPTS \
+        -H "Authorization: Bearer $ACCESS_TOKEN" \
+        "${PROVIDER_MANAGEMENT}/v3/assets/$ASSET_ID")"
     log $? "$RESPONSE"
 
     return $CODE
@@ -77,6 +82,7 @@ create_policy () {
     PAYLOAD="$(envsubst < resources/create-policy.json)"
 
     RESPONSE="$(curl $CURL_OPTS --data "${PAYLOAD}" \
+        -H "Authorization: Bearer $ACCESS_TOKEN" \
         -H 'content-type: application/json' \
         ${PROVIDER_MANAGEMENT}/v3/policydefinitions\
     )"
@@ -92,6 +98,7 @@ create_contract_def () {
     log $? "$PAYLOAD"
 
     RESPONSE="$(curl $CURL_OPTS --data "${PAYLOAD}" \
+        -H "Authorization: Bearer $ACCESS_TOKEN" \
         -H 'content-type: application/json' \
         ${PROVIDER_MANAGEMENT}/v3/contractdefinitions \
     )"
@@ -178,17 +185,18 @@ get_contract_agreement () {
     fi
 }
 
+DATA_DESTINATION=
 create_upload_destination () {
     echo -n ">>> Create upload destination "
     PAYLOAD="$(curl $CURL_OPTS -D - -X POST \
         -H "Tus-Resumable: 1.0.0" \
         -H "Upload-Defer-Length: 1" \
         -H "Authorization: Bearer $ACCESS_TOKEN" \
-        $TUS_SERVER)"
-    DATA_DESTINATION="${DATA_DESTINATION}$(echo "$PAYLOAD" \
+        $CONSUMER_TUS_SERVER)"
+    DATA_DESTINATION="${CONSUMER_DATA_DESTINATION}$(echo "$PAYLOAD" \
         | grep -e "Location" \
         | tr -d '\r' \
-        | sed "s|Location: $TUS_SERVER||")"
+        | sed "s|Location: $CONSUMER_TUS_SERVER||")"
     echo "${DATA_DESTINATION}"
 }
 

@@ -6,11 +6,25 @@ source ./common.sh
 
 await_liveness $PROVIDER_LIVENESS
 await_liveness $CONSUMER_LIVENESS
+
+
+# provider
+TOKEN_SCOPE=${PROVIDER_TOKEN_SCOPE}
+TOKEN_SERVICE=${PROVIDER_TOKEN_SERVICE}
+TOKEN_CLIENT_AUTH_HEADER=${PROVIDER_TOKEN_CLIENT_AUTH_HEADER}
+get_access_token
+
 create_asset
 create_policy
 create_contract_def
 
+
+# consumer
+TOKEN_SCOPE=${CONSUMER_TOKEN_SCOPE}
+TOKEN_SERVICE=${CONSUMER_TOKEN_SERVICE}
+TOKEN_CLIENT_AUTH_HEADER=${CONSUMER_TOKEN_CLIENT_AUTH_HEADER}
 get_access_token
+
 fetch_catalog
 get_data_set
 negotiate_contract
@@ -30,7 +44,7 @@ ENDPOINT="$(echo "$RESPONSE" | jq --raw-output '.endpoint')"
 DOWNLOAD_ACCESS_TOKEN="$(echo "$RESPONSE" | jq --raw-output '.authorization')"
 echo "Endpoint: $ENDPOINT"
 
-curl -v "$ENDPOINT" \
+curl $CURL_OPTS -v "$ENDPOINT" \
     -H "Authorization: $DOWNLOAD_ACCESS_TOKEN"
 
 

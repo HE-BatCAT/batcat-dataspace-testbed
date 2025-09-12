@@ -25,13 +25,14 @@ from .models import GrantType
 class TokenService:
 
     def __init__(self):
-        self._private_key = jwk.JsonWebKey.generate_key(kty="RSA", crv_or_size=1024, is_private=True)
+        self._private_key = jwk.JsonWebKey.generate_key(kty="RSA", crv_or_size=2048,
+                                                        options={"kid": uuid4().hex}, is_private=True)
         self._public_key = self._private_key.get_public_key()
         self._key_set = KeySet([self._private_key])
 
 
     def create_token(self, grant_type: GrantType, sub: str | None = None, scope: str | None = None):
-        header = {'alg': 'RS256'}
+        header = {'alg': 'RS256', 'kid': self._private_key.kid}
         payload = {'iss': settings.issuer, 'sub': sub}
         if sub is None:
             payload["sub"] = uuid4().hex

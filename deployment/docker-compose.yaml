@@ -8,7 +8,6 @@ x-linkahead-backend: &linkahead-backend
 x-linkahead: &linkahead
   image: linkahead:dev-vanilla
   environment:
-    CAOSDB_CONFIG_AUTH_OPTIONAL: "TRUE"
     CAOSDB_CONFIG_MYSQL_HOST: "linkahead-backend"
     CAOSDB_CONFIG_SERVER_PORT_HTTPS: Null
     CAOSDB_CONFIG_ADMIN_USER: "admin"
@@ -68,8 +67,7 @@ services:
     container_name: ${COMPOSE_PROJECT_NAME}-provider-linkahead
     links:
       - "provider-linkahead-backend:linkahead-backend"
-    ports:
-      - "9002:80"
+      - "provider-token-service:token-service"
   provider-connector:
     <<:
       - *connector
@@ -92,8 +90,8 @@ services:
       - *provider
     container_name: "${COMPOSE_PROJECT_NAME}-provider-nginx"
     ports:
-      - "${PROVIDER_NGINX_PORT_PRIVATE}:8001"
-      - "${PROVIDER_NGINX_PORT_PUBLIC}:8000"
+      - "${PROVIDER_NGINX_PORT_PRIVATE}:${PROVIDER_NGINX_PORT_PRIVATE}"
+      - "${PROVIDER_NGINX_PORT_PUBLIC}:${PROVIDER_NGINX_PORT_PUBLIC}"
     links:
       - "provider-token-service:token-service"
       - "provider-connector:connector"
@@ -136,13 +134,35 @@ services:
       - *consumer
     container_name: "${COMPOSE_PROJECT_NAME}-consumer-nginx"
     ports:
-      - "${CONSUMER_NGINX_PORT_PRIVATE}:8001"
-      - "${CONSUMER_NGINX_PORT_PUBLIC}:8000"
+      - "${CONSUMER_NGINX_PORT_PRIVATE}:${CONSUMER_NGINX_PORT_PRIVATE}"
+      - "${CONSUMER_NGINX_PORT_PUBLIC}:${CONSUMER_NGINX_PORT_PUBLIC}"
     links:
       - "consumer-connector:connector"
       - "consumer-tusd:tusd"
       - "consumer-token-service:token-service"
       - "consumer-untus-proxy:untus-proxy"
+      - "consumer-linkahead:linkahead"
+      - "consumer-linkahead-webui:linkahead-webui"
+  consumer-linkahead-webui:
+    <<:
+      - *linkahead-webui
+      - *consumer
+    container_name: ${COMPOSE_PROJECT_NAME}-consumer-linkahead-webui
+    links:
+      - "consumer-linkahead:linkahead"
+  consumer-linkahead-backend:
+    <<:
+      - *linkahead-backend
+      - *consumer
+    container_name: ${COMPOSE_PROJECT_NAME}-consumer-linkahead-backend
+  consumer-linkahead:
+    <<:
+      - *linkahead
+      - *consumer
+    container_name: ${COMPOSE_PROJECT_NAME}-consumer-linkahead
+    links:
+      - "consumer-linkahead-backend:linkahead-backend"
+      - "consumer-token-service:token-service"
 
 networks:
   consumer:

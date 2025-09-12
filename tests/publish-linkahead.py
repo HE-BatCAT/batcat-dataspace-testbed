@@ -9,10 +9,10 @@ import linkahead as la
 ASSET_ID = sys.argv[1]
 
 host = os.environ.get("HOSTNAME")
+ACCESS_TOKEN = os.environ.get("ACCESS_TOKEN")
 PROVIDER_PRIVATE=f"http://{host}:9001"
 PROVIDER_MANAGEMENT=f"{PROVIDER_PRIVATE}/management"
 PROVIDER_LINKAHEAD=f"{PROVIDER_PRIVATE}/linkahead"
-base_path = la.get_connection()._delegate_connection._base_path
 
 template = {
   "@context": {
@@ -27,8 +27,10 @@ template = {
   },
   "dataAddress": {
     "type": "HttpData",
-    "name": None, # WHY???
-    "baseUrl": None
+    "name": None, # why need name?
+    "baseUrl": None,
+    "authKey": "Authorization",
+    "authCode": f"Bearer {ACCESS_TOKEN}"
   }
 }
 
@@ -44,6 +46,7 @@ def to_asset_json(entity):
     template["properties"]["description"] = entity.description
     template["dataAddress"]["name"] = entity.name
     template["dataAddress"]["baseUrl"] = get_base_url(entity.id)
+
     return json.dumps(template)
 
 def publish(assets):
@@ -54,7 +57,9 @@ def publish(assets):
         response = requests.post(
             url=f"{PROVIDER_MANAGEMENT}/v3/assets",
             data=a,
-            headers={"content-type": "application/json"}
+            headers={
+                "authorization": f"Bearer {ACCESS_TOKEN}",
+                "content-type": "application/json"}
             )
         print(response.text)
         print('}')
