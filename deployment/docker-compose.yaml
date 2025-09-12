@@ -1,3 +1,6 @@
+x-linkahead-webui: &linkahead-webui
+  image: linkahead-webui:latest
+  command: ["nginx${NGINX_DEBUG}", '-g', 'daemon off;']
 x-linkahead-backend: &linkahead-backend
   image: linkahead-backend:mariadb-11.8.3-noble
   environment:
@@ -8,7 +11,6 @@ x-linkahead: &linkahead
     CAOSDB_CONFIG_AUTH_OPTIONAL: "TRUE"
     CAOSDB_CONFIG_MYSQL_HOST: "linkahead-backend"
     CAOSDB_CONFIG_SERVER_PORT_HTTPS: Null
-    CAOSDB_CONFIG_CONTEXT_ROOT: "/linkahead"
     CAOSDB_CONFIG_ADMIN_USER: "admin"
     CAOSDB_CONFIG_ADMIN_PASSWORD: "password"
     JAVA_TOOL_OPTIONS: "-Dcaosdb.debug=true"
@@ -39,14 +41,21 @@ x-connector: &connector
     test: ["CMD", "curl", "--fail-with-body", "http://localhost:19191/api/check/health"]
 x-nginx: &nginx
   image: nginx:1.29-alpine-slim
-  command: ['nginx-debug', '-g', 'daemon off;']
+  command: ['nginx${NGINX_DEBUG}', '-g', 'daemon off;']
   volumes:
     - type: bind
       source: nginx/nginx.conf
-      target: /etc/nginx/templates/nginx.conf.template
+      target: /etc/nginx/templates/default.conf.template
       read_only: true
 
 services:
+  provider-linkahead-webui:
+    <<:
+      - *linkahead-webui
+      - *provider
+    container_name: ${COMPOSE_PROJECT_NAME}-provider-linkahead-webui
+    links:
+      - "provider-linkahead:linkahead"
   provider-linkahead-backend:
     <<:
       - *linkahead-backend
@@ -89,6 +98,7 @@ services:
       - "provider-token-service:token-service"
       - "provider-connector:connector"
       - "provider-linkahead:linkahead"
+      - "provider-linkahead-webui:linkahead-webui"
   consumer-token-service:
     <<: *consumer
     container_name: "${COMPOSE_PROJECT_NAME}-consumer-token-service"
