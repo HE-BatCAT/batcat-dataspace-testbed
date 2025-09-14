@@ -1,6 +1,10 @@
 x-linkahead-webui: &linkahead-webui
   image: linkahead-webui:latest
   command: ["nginx${NGINX_DEBUG}", '-g', 'daemon off;']
+  volumes:
+    - type: bind
+      source: ./webui/
+      target: /public/ext/
 x-linkahead-backend: &linkahead-backend
   image: linkahead-backend:mariadb-11.8.3-noble
   environment:
@@ -13,6 +17,11 @@ x-linkahead: &linkahead
     CAOSDB_CONFIG_ADMIN_USER: "admin"
     CAOSDB_CONFIG_ADMIN_PASSWORD: "password"
     JAVA_TOOL_OPTIONS: "-Dcaosdb.debug=true"
+    DOIP_SERVER_HOST: "$DOCKER_HOST"
+  volumes:
+    - type: bind
+      source: ./sss
+      target: /linkahead/scripting/
 x-consumer: &consumer
   env_file:
     - .env
@@ -46,6 +55,12 @@ x-nginx: &nginx
       source: nginx/nginx.conf
       target: /etc/nginx/templates/default.conf.template
       read_only: true
+
+networks:
+  consumer:
+    name: "${COMPOSE_PROJECT_NAME}-consumer"
+  provider:
+    name: "${COMPOSE_PROJECT_NAME}-provider"
 
 services:
   provider-linkahead-webui:
@@ -163,9 +178,3 @@ services:
     links:
       - "consumer-linkahead-backend:linkahead-backend"
       - "consumer-token-service:token-service"
-
-networks:
-  consumer:
-    name: "${COMPOSE_PROJECT_NAME}-consumer"
-  provider:
-    name: "${COMPOSE_PROJECT_NAME}-provider"
