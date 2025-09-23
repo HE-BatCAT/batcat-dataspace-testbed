@@ -9,6 +9,10 @@ Testbed for the BatCAT data space.
 
 All commands are executed from the repository's root directory unless stated otherwise.
 
+## Initialize GIT Submodules
+
+* `git submodule update --init`
+
 ## Build the Testbed
 
 * `make`
