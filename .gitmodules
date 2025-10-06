@@ -1,9 +1,9 @@
 [submodule "linkahead/webui"]
 	path = linkahead/webui
-	url = git@gitlab.indiscale.com:caosdb/src/caosdb-webui
+	url = https://gitlab.indiscale.com/caosdb/src/caosdb-webui
 [submodule "linkahead/server"]
 	path = linkahead/server
-	url = git@gitlab.indiscale.com:caosdb/src/caosdb-server.git
+	url = https://gitlab.indiscale.com/caosdb/src/caosdb-server.git
 [submodule "linkahead/backend"]
 	path = linkahead/backend
-	url = git@gitlab.indiscale.com:caosdb/src/caosdb-mysqlbackend.git
+	url = https://gitlab.indiscale.com/caosdb/src/caosdb-mysqlbackend.git
