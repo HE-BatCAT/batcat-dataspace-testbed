@@ -25,6 +25,7 @@ class GrantType(str, Enum):
 class ClientCredentialsGrantRequest(BaseModel):
     grant_type: GrantType = Field()
     scope: str | SkipJsonSchema[None] = None
+    sub: str | None = None
 
     model_config = {
         "extra": "forbid",

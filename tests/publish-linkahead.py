@@ -6,7 +6,7 @@ import json
 import requests
 import linkahead as la
 
-ASSET_ID = sys.argv[1]
+#ASSET_ID = sys.argv[1]
 
 host = os.environ.get("HOSTNAME")
 ACCESS_TOKEN = os.environ.get("ACCESS_TOKEN")
@@ -27,7 +27,6 @@ template = {
   },
   "dataAddress": {
     "type": "HttpData",
-    "name": None, # why need name?
     "baseUrl": None,
     "authKey": "Authorization",
     "authCode": f"Bearer {ACCESS_TOKEN}"
@@ -38,13 +37,11 @@ def get_base_url(entity_id):
     return f"{PROVIDER_LINKAHEAD}/Entity/" + str(entity_id)
 
 def to_asset_json(entity):
-    template["@id"] = ASSET_ID
-    #str(entity.id)
-    template["properties"]["id"] = ASSET_ID
+    template["@id"] = str(entity.id)
+    template["properties"]["state"] = "public"
     template["properties"]["role"] = entity.role
     template["properties"]["name"] = entity.name
     template["properties"]["description"] = entity.description
-    template["dataAddress"]["name"] = entity.name
     template["dataAddress"]["baseUrl"] = get_base_url(entity.id)
 
     return json.dumps(template)
@@ -65,7 +62,7 @@ def publish(assets):
         print('}')
 
 def create_record_type():
-    c = la.execute_query("FIND RECORDTYPE")
+    c = la.execute_query("FIND ENTITY")
     if len(c) == 0:
         c = la.Container()
         c.append(la.RecordType(name="Test", description="Test Desc"))

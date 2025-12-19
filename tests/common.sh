@@ -89,6 +89,30 @@ create_policy () {
     log $? "$RESPONSE"
 }
 
+list_policies () {
+    _reset="$(shopt -p -o errexit || true)"
+    echo ">>> List policies"
+    set +e
+    RESPONSE="$(curl $CURL_OPTS --data "{\"@context\":{\"@vocab\":\"https://w3id.org/edc/v0.0.1/ns/\"},\"@type\":\"QuerySpec\"}" \
+        -H "Authorization: Bearer $ACCESS_TOKEN" \
+        -H 'content-type: application/json' \
+        "${PROVIDER_MANAGEMENT}/v3/policydefinitions/request"\
+    )"
+    log $? "$RESPONSE"
+}
+
+
+get_policy () {
+    _reset="$(shopt -p -o errexit || true)"
+    echo ">>> Get policy $POLICY_ID"
+    set +e
+    RESPONSE="$(curl $CURL_OPTS \
+        -H "Authorization: Bearer $ACCESS_TOKEN" \
+        "${PROVIDER_MANAGEMENT}/v3/policydefinitions/$POLICY_ID"\
+    )"
+    log $? "$RESPONSE"
+}
+
 create_contract_def () {
     echo ">>> Create contract definition"
     export POLICY_ID
@@ -101,6 +125,18 @@ create_contract_def () {
         -H "Authorization: Bearer $ACCESS_TOKEN" \
         -H 'content-type: application/json' \
         ${PROVIDER_MANAGEMENT}/v3/contractdefinitions \
+    )"
+    log $? "$RESPONSE"
+}
+
+list_contract_definitions () {
+    _reset="$(shopt -p -o errexit || true)"
+    echo ">>> List contract definitions"
+    set +e
+    RESPONSE="$(curl $CURL_OPTS --data "{\"@context\":{\"@vocab\":\"https://w3id.org/edc/v0.0.1/ns/\"},\"@type\":\"QuerySpec\"}" \
+        -H "Authorization: Bearer $ACCESS_TOKEN" \
+        -H 'content-type: application/json' \
+        "${PROVIDER_MANAGEMENT}/v3/contractdefinitions/request"\
     )"
     log $? "$RESPONSE"
 }

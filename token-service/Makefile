@@ -15,5 +15,9 @@
 #
 #  Contributors:
 #       IndiScale GmbH - initial API and implementation
+PORT ?= 8000
 build:
 	docker build . -t token-service:latest
+
+run-dev:
+	REGISTERED_CLIENTS_JSON_FILE=./clients.json fastapi dev src/main.py --port $(PORT)
